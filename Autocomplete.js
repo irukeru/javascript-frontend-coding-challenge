@@ -31,6 +31,9 @@ export default class Autocomplete {
               if (resp.body && resp.body.items) {
                 this.updateDropdown(this.prepareRequestedResults(resp.body.items));
               }
+            })
+            .catch(error => {
+              console.log(error);
             });
     }
   }
@@ -79,7 +82,10 @@ export default class Autocomplete {
       // Pass the value to the onSelect callback
       el.addEventListener('click', (event) => {
         const { onSelect } = this.options;
-        if (typeof onSelect === 'function') onSelect(result.value);
+        if (typeof onSelect === 'function') {
+          this.inputEl.value = result.text;
+           onSelect(result.value);
+        }
       });
 
       fragment.appendChild(el);
