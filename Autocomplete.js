@@ -1,17 +1,51 @@
+var HTTPService = require('./httpservice');
+
 export default class Autocomplete {
   constructor(rootEl, options = {}) {
-    options = Object.assign({ numOfResults: 10, data: [] }, options);
+    options = Object.assign({ numOfResults: 10, data: [], isLocal: true, queryURL: "" }, options);
     Object.assign(this, { rootEl, options });
 
     this.init();
   }
 
-  onQueryChange(query) {
+  onQueryChange(query, isLocal) {
     // Get data for the dropdown
-    let results = this.getResults(query, this.options.data);
-    results = results.slice(0, this.options.numOfResults);
+    if (isLocal) {
+      let results;
 
-    this.updateDropdown(results);
+      results = this.getResults(query, this.options.data);
+      results = results.slice(0, this.options.numOfResults);
+
+      this.updateDropdown(results);
+    } else {
+      // prepare params for the reuqest
+      let queryParams = {
+        q: query,
+        per_page: this.options.numOfResults
+      };
+
+      // now its time to fetch data with http request
+      this._httpService.get(this.options.queryURL, queryParams)
+            .then(resp => {
+              // we need to wait for end of the http request to prepare the results.
+              if (resp.body && resp.body.items) {
+                this.updateDropdown(this.prepareRequestedResults(resp.body.items));
+              }
+            });
+    }
+  }
+
+  /**
+   * 
+   * we need to prepare result array for our structure.
+   */
+  prepareRequestedResults(results) {
+    let userNameList = [];
+
+    results.forEach(result => {
+      userNameList.push({ text: result.login, value: result.id});
+    });
+    return userNameList;
   }
 
   /**
@@ -53,7 +87,7 @@ export default class Autocomplete {
     return fragment;
   }
 
-  createQueryInputEl() {
+  createQueryInputEl(isLocal) {
     const inputEl = document.createElement('input');
     Object.assign(inputEl, {
       type: 'search',
@@ -62,19 +96,21 @@ export default class Autocomplete {
     });
 
     inputEl.addEventListener('input', event =>
-      this.onQueryChange(event.target.value));
+      this.onQueryChange(event.target.value, isLocal));
 
     return inputEl;
   }
 
   init() {
     // Build query input
-    this.inputEl = this.createQueryInputEl();
+    this.inputEl = this.createQueryInputEl(this.options.isLocal);
     this.rootEl.appendChild(this.inputEl)
 
     // Build results dropdown
     this.listEl = document.createElement('ul');
     Object.assign(this.listEl, { className: 'results' });
     this.rootEl.appendChild(this.listEl);
+
+    this._httpService = new HTTPService.HttpService;
   }
 }
