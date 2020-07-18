@@ -16,12 +16,14 @@ ul {
   margin: 0;
 }
 
+ul li.selected {background:lightgray}
+
 .results {
   border: 1px solid #ccc;
   border-top: 0;
   width: 100%;
   padding: 5px 0;
-  max-height: 200px;
+  max-height: 350px;
   overflow-y: scroll;
 }
 

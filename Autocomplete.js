@@ -40,7 +40,7 @@ export default class Autocomplete {
 
   /**
    * 
-   * we need to prepare result array for our structure.
+   * we need to prepare result array that we have requested from url for our structure.
    */
   prepareRequestedResults(results) {
     let userNameList = [];
@@ -65,6 +65,50 @@ export default class Autocomplete {
     return results;
   }
 
+  onKeyDown(event, results) {
+    let list = this.listEl.getElementsByClassName("result");
+    switch(event.key) {
+      case "ArrowDown":
+        if(this.selectedListItem > -1) {
+          list[this.selectedListItem].classList.remove("selected");
+
+          if (this.selectedListItem < list.length - 1) {
+            this.selectedListItem += 1;
+          } else {
+            this.selectedListItem = 0;
+          }
+
+          list[this.selectedListItem].classList.add("selected");  
+        } else {
+          this.selectedListItem = 0;
+          list[this.selectedListItem].classList.add("selected");
+        } 
+        break;
+
+      case "ArrowUp":
+        if(this.selectedListItem > -1) {
+          list[this.selectedListItem].classList.remove("selected");
+          if (this.selectedListItem > 0) {
+            this.selectedListItem -= 1;
+          } else {
+            this.selectedListItem = list.length - 1;  
+          }
+
+          list[this.selectedListItem].classList.add("selected");
+        } else {
+          this.selectedListItem = list.length - 1;
+          list[this.selectedListItem].classList.add("selected");
+        }
+        break;
+
+      case "Enter":
+        if (this.selectedListItem > -1) {
+          list[this.selectedListItem].click();
+        }
+        break;
+    }
+  }
+
   updateDropdown(results) {
     this.listEl.innerHTML = '';
     this.listEl.appendChild(this.createResultsEl(results));
@@ -84,7 +128,7 @@ export default class Autocomplete {
         const { onSelect } = this.options;
         if (typeof onSelect === 'function') {
           this.inputEl.value = result.text;
-           onSelect(result.value);
+          onSelect(result.value);
         }
       });
 
@@ -104,6 +148,9 @@ export default class Autocomplete {
     inputEl.addEventListener('input', event =>
       this.onQueryChange(event.target.value, isLocal));
 
+    inputEl.addEventListener('keydown', event => 
+      this.onKeyDown(event));
+
     return inputEl;
   }
 
@@ -116,6 +163,8 @@ export default class Autocomplete {
     this.listEl = document.createElement('ul');
     Object.assign(this.listEl, { className: 'results' });
     this.rootEl.appendChild(this.listEl);
+
+    this.selectedListItem = -1;
 
     this._httpService = new HTTPService.HttpService;
   }
