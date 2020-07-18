@@ -66,7 +66,9 @@ export default class Autocomplete {
   }
 
   onKeyDown(event, results) {
+
     let list = this.listEl.getElementsByClassName("result");
+
     switch(event.key) {
       case "ArrowDown":
         if(this.selectedListItem > -1) {
@@ -103,7 +105,7 @@ export default class Autocomplete {
 
       case "Enter":
         if (this.selectedListItem > -1) {
-          list[this.selectedListItem].click();
+          window.location.href = 'http://localhost:8080/?q=' + list[this.selectedListItem].innerText;
         }
         break;
     }
@@ -165,6 +167,13 @@ export default class Autocomplete {
     this.rootEl.appendChild(this.listEl);
 
     this.selectedListItem = -1;
+
+
+    var urlParams = new URLSearchParams(window.location.search);
+
+    if (urlParams.get('q')) {
+      this.inputEl.value = urlParams.get('q');
+    } 
 
     this._httpService = new HTTPService.HttpService;
   }
